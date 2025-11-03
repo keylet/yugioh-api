@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>YuGiOh API - Buscar</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><h1>YuGiOh API - Búsqueda</h1></header>
+
+  <section id="results" class="cards"></section>
+
+  <!-- searchbox en la parte inferior -->
+  <footer class="bottom-search">
+    <input id="q" placeholder="Buscar cartas, mecánicas, temas..." />
+    <button id="btn">🔍</button>
+  </footer>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if(!token) location.href = '/login.html';
+
+    async function doSearch() {
+      const q = document.getElementById('q').value;
+      const url = 'http://localhost:4000/search?q=' + encodeURIComponent(q);
+      const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+      const data = await res.json();
+      const results = document.getElementById('results');
+      results.innerHTML = '';
+      if(res.ok && data.results.length){
+        data.results.forEach(r => {
+          const div = document.createElement('div');
+          div.className = 'card';
+          div.innerHTML = `<h3>${r.title}</h3><p>${r.summary || ''}</p><small>${(r.tags||[]).join(', ')}</small>`;
+          div.addEventListener('click', ()=> showDetail(r.id));
+          results.appendChild(div);
+        });
+      } else {
+        results.innerHTML = '<p>No hay resultados</p>';
+      }
+    }
+
+    async function showDetail(id){
+      const res = await fetch('http://localhost:4000/articles/'+id, { headers: { Authorization: 'Bearer ' + token } });
+      if(!res.ok) return alert('No encontrado');
+      const d = await res.json();
+      alert(d.title + "\n\n" + d.content);
+    }
+
+    document.getElementById('btn').addEventListener('click', doSearch);
+    document.getElementById('q').addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') doSearch();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    container_name: yugioh-api-db-1
+    restart: always
+    environment:
+      POSTGRES_USER: yugiohuser
+      POSTGRES_PASSWORD: yugiohpass
+      POSTGRES_DB: yugiohdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+
+  api:
+    build: ./api
+    container_name: yugioh-api-api-1
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: yugiohuser
+      DB_PASSWORD: yugiohpass
+      DB_NAME: yugiohdb
+      DB_PORT: 5432
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build: ./frontend
+    container_name: yugioh-api-frontend-1
+    restart: always
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  db_data:
